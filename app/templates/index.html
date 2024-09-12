@@ -8,17 +8,17 @@
     <h1>Upload CSV File</h1>
     <form action="/" method="post" enctype="multipart/form-data">
         <input type="file" name="file">
-        <input type="submit" value="Upload">
+        <input type="submit" value="Upload & Process">
     </form>
 
     {% if filename %}
-        <h2>Graph Generated</h2>
-        <p>File Name: {{ filename }}</p>
+        <h2>Graphs Generated</h2>
+        <p>Download your ZIP file:</p>
         <a href="{{url_for('static', filename = 'uploads/' + filename)}}" download>
-            <button>Download File</button>
+            <button>Download ZIP File</button>
         </a>
     {% else %}
-        <p>No graph generated yet. Upload a CSV file to generate a graph.</p>
+        <p>No graphs generated yet. Upload a CSV file to generate graphs.</p>
     {% endif %}
 </body>
 </html>

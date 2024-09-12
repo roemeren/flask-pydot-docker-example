@@ -1,25 +1,22 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request
 import os
 import pandas as pd
 import pydot
+import zipfile
 
 app = Flask(__name__)
 
-# Ensure the upload directory exists (os.path ensures OS compatible path)
-# note: serving files from static directory simplifies the code (no routing)
+# Ensure the upload directory exists
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Route for file upload and graph generation
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # First call is a GET request
-    file_name = None
+    zip_filename = None
     if request.method == "POST":
-        # Check if a file has been uploaded
         if 'file' not in request.files:
             return "No file part"
         
@@ -32,32 +29,50 @@ def index():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(filepath)
             
-            # Process the CSV file to generate the graph
-            file_name = process_csv(filepath)
-    return render_template("index.html", filename=file_name)
+            # Process the CSV file to generate the graphs
+            zip_filename = process_csv(filepath)
+    
+    return render_template("index.html", filename = zip_filename)
 
 def process_csv(filepath):
-    # Read the CSV file
     df = pd.read_csv(filepath)
 
-    # Check if 'from' and 'to' columns exist
-    if 'from' not in df.columns or 'to' not in df.columns:
-        raise ValueError("CSV file must contain 'from' and 'to' columns.")
+    if 'from' not in df.columns or 'to' not in df.columns or 'group' not in df.columns:
+        raise ValueError("CSV file must contain 'from', 'to', and 'group' columns.")
 
-    # Create a directed graph
-    graph = pydot.Dot(graph_type='digraph')
-
-    # Add edges from the CSV file
-    for _, row in df.iterrows():
-        edge = pydot.Edge(str(row['from']), str(row['to']))
-        graph.add_edge(edge)
-
-    # Save the graph as a PNG file
-    graph_filename = 'network_graph.png'
-    graph_output = os.path.join(app.config['UPLOAD_FOLDER'], graph_filename)
-    graph.write_png(graph_output)
-
-    return graph_filename
+    # Create a directory for temporary PNG files
+    temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'temp')
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    
+    groups = df['group'].unique()
+    graph_files = []
+    
+    for group in groups:
+        group_df = df[df['group'] == group]
+        graph = pydot.Dot(graph_type='digraph')
+        for _, row in group_df.iterrows():
+            edge = pydot.Edge(str(row['from']), str(row['to']))
+            graph.add_edge(edge)
+        graph_filename = f'{group}_network_graph.png'
+        graph_output = os.path.join(temp_dir, graph_filename)
+        graph.write_png(graph_output)
+        graph_files.append(graph_output)
+    
+    # Create a ZIP file of the PNG files
+    zip_filename = 'network_graphs.zip'
+    zip_path = os.path.join(app.config['UPLOAD_FOLDER'], zip_filename)
+    
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        for file in graph_files:
+            zipf.write(file, os.path.basename(file))
+    
+    # Clean up temporary files
+    for file in graph_files:
+        os.remove(file)
+    os.rmdir(temp_dir)
+    
+    return zip_filename
 
 if __name__ == "__main__":
     app.run(debug=True)
