@@ -17,9 +17,10 @@ jobs:
     - name: Deploy to Render
       env:
         RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}  # API key for Render, stored in GitHub Secrets
+        RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }} # Render app service ID
       run: |
         # Authenticate with Render API
-        curl -X POST "https://api.render.com/v1/services/your-service-id/deploys" \
+        curl -X POST "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
           -H "Authorization: Bearer $RENDER_API_KEY" \
           -H "Content-Type: application/json" \
           -d '{"branch": "main"}'  # Trigger deployment for the main branch
