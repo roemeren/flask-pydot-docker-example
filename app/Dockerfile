@@ -16,5 +16,5 @@ RUN apt-get update && apt-get install -y graphviz
 # Expose the port the app runs on
 EXPOSE 5000
 
-# Run app.py when the container launches
+# Run app.py when the container launches (use gunicorn for non-dev environment)
 CMD ["python", "app.py"]
