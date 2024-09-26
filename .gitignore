@@ -1,2 +1,4 @@
 data/
 app/static
+app/__pycache__
+*.pyc
