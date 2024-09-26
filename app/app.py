@@ -1,3 +1,26 @@
+"""
+app.py
+
+Flask web application for uploading and processing CSV files.
+
+This application allows users to upload CSV files, which are then processed 
+in the background. The progress of the processing is tracked and can be 
+queried via a dedicated endpoint.
+
+Key Features:
+- File upload via a web form.
+- Background processing of CSV files using the `process_csv` function.
+- Progress tracking for ongoing processing tasks.
+- Progress information is accessible through the `/progress` endpoint.
+
+Configuration:
+- Uploads are saved in the `static/uploads` directory, which is created 
+  if it does not exist.
+
+Usage:
+Run this module to start the Flask development server.
+"""
+
 from flask import Flask, render_template, request, jsonify
 import os
 from processing import process_csv
