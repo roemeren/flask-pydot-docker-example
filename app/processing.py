@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import pydot
 import zipfile
-import time
 from common import progress_data
 
 def process_csv(filepath, uploadfolder):
@@ -33,11 +32,9 @@ def process_csv(filepath, uploadfolder):
         graph.write_png(graph_output)
         graph_files.append(graph_output)
 
-        # Simulate processing time and update progress
+        # Update progress
         current_progress += 1
         progress_data['progress'] = int((current_progress / total_groups) * 100)
-        # Simulate some processing delay
-        time.sleep(0.1)
 
     # Create a ZIP file of the output PNG files
     zip_filename = 'network_graphs.zip'
